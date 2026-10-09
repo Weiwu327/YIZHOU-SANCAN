@@ -42,6 +42,24 @@ main{display:flex;flex-direction:column;gap:16px;margin-top:14px}
 .it.on .tk{background:var(--accent);border-color:var(--accent)}
 .it.on .tk::after{opacity:1}
 .it.on .nm,.it.on .qt{text-decoration:line-through;color:var(--done)}
+.tabs{display:flex;margin-top:10px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.tabs button{flex:1;border:0;background:var(--card);color:var(--muted);font:inherit;font-size:15px;padding:8px 6px;cursor:pointer}
+.tabs button+button{border-left:1px solid var(--line)}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);font-weight:700}
+.day{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;scroll-margin-top:150px}
+.day h2{margin:0;padding:10px 14px 8px;font-size:16px;display:flex;align-items:baseline;gap:8px;border-bottom:1px solid var(--line)}
+.day h2 .dt{color:var(--muted);font-size:13px;font-weight:400;font-variant-numeric:tabular-nums}
+.day h2 .tag{margin-left:auto;align-self:center;font-size:12px;font-style:normal;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:0 9px}
+.day.today{border:2px solid var(--accent)}
+.day.weekend h2 .dn{color:var(--accent)}
+.meal{display:grid;grid-template-columns:4.6em minmax(0,1fr);gap:10px;padding:9px 14px;align-items:baseline}
+.meal+.meal{border-top:1px dashed var(--line)}
+.meal .ml{font-size:13px;font-weight:700;border-left:4px solid var(--mc);padding-left:8px;color:var(--ink)}
+.meal .ds{display:flex;flex-wrap:wrap;gap:4px 6px;min-width:0}
+.meal .d{background:var(--mb);border-radius:6px;padding:1px 8px;font-size:15px;overflow-wrap:anywhere}
+.meal .none{color:var(--done);font-size:14px}
+.m-b{--mc:#B57A0A;--mb:#FAF0D8}.m-l{--mc:#4F8A35;--mb:#E5F0DC}.m-d{--mc:#3C4C93;--mb:#E2E6F4}
+@media (prefers-color-scheme:dark){.m-b{--mc:#E9B949;--mb:#2F2713}.m-l{--mc:#8DC46E;--mb:#1E2B18}.m-d{--mc:#93A1EA;--mb:#1D2240}}
 .ok{margin-top:12px;border:1px solid var(--accent);color:var(--accent);background:var(--card);border-radius:12px;padding:12px 14px;font-weight:700;text-align:center}
 footer{margin-top:20px;display:flex;flex-direction:column;gap:8px}
 button.big{font:inherit;font-size:15px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:11px;width:100%;cursor:pointer}
@@ -63,8 +81,13 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
   </div>
   <div class="meta" id="meta"></div>
   <div class="sum" id="sum" hidden></div>
+  <nav class="tabs" id="tabs" role="tablist" hidden>
+    <button type="button" role="tab" id="tab-list" data-tab="list" aria-selected="true"></button>
+    <button type="button" role="tab" id="tab-menu" data-tab="menu" aria-selected="false"></button>
+  </nav>
 </header>
 <main id="list"></main>
+<main id="menu" hidden></main>
 <div class="ok" id="ok" hidden></div>
 <div class="err" id="err" hidden></div>
 <footer id="foot" hidden>
@@ -84,7 +107,9 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
   var MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   var T = {
     zh: {
-      title: "购物清单", loading: "正在读取清单…", people: "{n} 人", sent: "发出于 {d}", sum: "还要买 <b>{a}</b> 项 · 已买 <b>{b}</b> 项",
+      title: "购物清单", menuTitle: "每日菜单", tabList: "购物清单", tabMenu: "每日菜单", today: "今天", noDish: "—",
+      days: ["周六", "周日", "周一", "周二", "周三", "周四", "周五"], meals: ["早餐", "午餐", "晚餐"],
+      noMenu: "这个链接里没有菜单。请让家里在「一周三餐」里重新点「生成微信链接」再发一次。", loading: "正在读取清单…", people: "{n} 人", sent: "发出于 {d}", sum: "还要买 <b>{a}</b> 项 · 已买 <b>{b}</b> 项",
       servings: "{n} 人份", usesFor: "用于 {list}", atHome: "家里还有 {x}", some: "一些", sep: "、", other: "其他",
       doneHead: "已买（{n}）· 点一下可以撤回", allDone: "全部买齐了", copy: "复制购买结果（发回给家里）", copied: "已复制，到微信里粘贴发回去",
       copyManual: "长按上面的文字全选、复制，发回给家里", hint: "点一项就算买好了，会移到下面「已买」；再点一下可以撤回。勾选记录保存在这台手机上，关掉再打开还在。",
@@ -96,7 +121,9 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
       errBad: "这个链接不完整，读不出清单。请让家里在「一周三餐」里重新点「生成微信链接」再发一次。"
     },
     en: {
-      title: "Shopping list", loading: "Loading the list…", people: "{n} people", sent: "sent {d}", sum: "To buy <b>{a}</b> · Bought <b>{b}</b>",
+      title: "Shopping list", menuTitle: "Daily menu", tabList: "Shopping list", tabMenu: "Daily menu", today: "Today", noDish: "—",
+      days: ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"], meals: ["Breakfast", "Lunch", "Dinner"],
+      noMenu: "This link doesn’t include the menu. Ask for a new link from the meal planner.", loading: "Loading the list…", people: "{n} people", sent: "sent {d}", sum: "To buy <b>{a}</b> · Bought <b>{b}</b>",
       servings: "{n} servings", usesFor: "For {list}", atHome: "At home: {x}", some: "some", sep: ", ", other: "Other",
       doneHead: "Bought ({n}) · tap to undo", allDone: "Everything’s bought", copy: "Copy result (send it back home)", copied: "Copied — paste it into WeChat to send back",
       copyManual: "Press and hold the text above, select all, copy and send it back", hint: "Tap an item once it’s in your basket — it moves down to “Bought”. Tap again to undo. Ticks are saved on this phone, even if you close the page.",
@@ -170,7 +197,7 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
   }
 
   // ---------- 状态 / state ----------
-  var data = null, items = [], st = {}, KEY = "", errKey = "";
+  var data = null, items = [], st = {}, KEY = "", errKey = "", TAB = stored("gouwu-tab") === "menu" ? "menu" : "list", scrolledToday = false;
   function stored(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function store(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* 存不了也能用 */ } }
 
@@ -202,6 +229,32 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
     return data.t || "";
   }
 
+  // ---------- 每日菜单 / daily menu ----------
+  function weekStart() {
+    if (!data || !data.w) return null;
+    var p = data.w.split("-").map(Number);
+    return new Date(p[0], p[1] - 1, p[2]);
+  }
+  function renderMenu() {
+    if (!Array.isArray(data.m)) { $("menu").innerHTML = '<p class="meta">' + esc(tr("noMenu")) + "</p>"; return; }
+    var start = weekStart(), now = new Date(), h = "";
+    for (var d = 0; d < 7; d++) {
+      var dt = start ? new Date(start.getFullYear(), start.getMonth(), start.getDate() + d) : null;
+      var isToday = dt && dt.getFullYear() === now.getFullYear() && dt.getMonth() === now.getMonth() && dt.getDate() === now.getDate();
+      h += '<section class="day' + (d < 2 ? " weekend" : "") + (isToday ? " today" : "") + '"' + (isToday ? ' id="today"' : "") + ">" +
+        '<h2><span class="dn">' + esc(tr("days")[d]) + "</span>" + (dt ? '<span class="dt">' + (dt.getMonth() + 1) + "/" + dt.getDate() + "</span>" : "") +
+        (isToday ? '<em class="tag">' + esc(tr("today")) + "</em>" : "") + "</h2>";
+      ["b", "l", "d"].forEach(function (k, mi) {
+        var dishes = (data.m[d] && data.m[d][mi]) || [];
+        h += '<div class="meal m-' + k + '"><span class="ml">' + esc(tr("meals")[mi]) + '</span><span class="ds">' +
+          (dishes.length ? dishes.map(function (n) { return '<span class="d">' + esc(n) + "</span>"; }).join("") : '<span class="none">' + esc(tr("noDish")) + "</span>") +
+          "</span></div>";
+      });
+      h += "</section>";
+    }
+    $("menu").innerHTML = h;
+  }
+
   // ---------- 显示 / render ----------
   function itemHtml(it) {
     var on = !!st[it.k];
@@ -212,9 +265,9 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
   function render() {
     document.documentElement.lang = LANG === "en" ? "en" : "zh-CN";
     Array.prototype.forEach.call(document.querySelectorAll(".lang button"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-lang") === LANG)); });
-    $("title").textContent = tr("title");
+    $("title").textContent = tr(TAB === "menu" && data && Array.isArray(data.m) ? "menuTitle" : "title");
     if (!data) { if (errKey) { $("err").textContent = tr(errKey); $("err").hidden = false; $("meta").textContent = ""; } else $("meta").textContent = tr("loading"); return; }
-    document.title = tr("title") + " " + range();
+    document.title = tr(TAB === "menu" && Array.isArray(data.m) ? "menuTitle" : "title") + " " + range();
     $("meta").textContent = [range(), data.p ? tr("people", { n: data.p }) : "", data.d ? tr("sent", { d: data.d }) : ""].filter(Boolean).join(" · ");
     var todo = items.filter(function (it) { return !st[it.k]; }), done = items.filter(function (it) { return st[it.k]; });
     $("sum").innerHTML = tr("sum", { a: todo.length, b: done.length });
@@ -233,8 +286,23 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
     $("ok").hidden = !(items.length && !todo.length);
     $("copy").textContent = tr("copy");
     $("hint").textContent = tr("hint");
-    $("foot").hidden = false;
     $("res").hidden = true;
+    // 标签：旧链接里没有菜单，就不显示「每日菜单」
+    var hasMenu = Array.isArray(data.m);
+    if (!hasMenu) TAB = "list";
+    $("tabs").hidden = !hasMenu;
+    $("tab-list").textContent = tr("tabList");
+    $("tab-menu").textContent = tr("tabMenu");
+    $("tab-list").setAttribute("aria-selected", String(TAB === "list"));
+    $("tab-menu").setAttribute("aria-selected", String(TAB === "menu"));
+    var onList = TAB === "list";
+    $("list").hidden = !onList; $("sum").hidden = !onList; $("foot").hidden = !onList;
+    $("ok").hidden = !onList || !(items.length && !todo.length);
+    $("menu").hidden = onList;
+    if (!onList) {
+      renderMenu();
+      if (!scrolledToday && $("today")) { scrolledToday = true; $("today").scrollIntoView({ block: "start" }); }
+    }
   }
 
   document.addEventListener("change", function (ev) {
@@ -245,6 +313,14 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
     render();
   });
   document.addEventListener("click", function (ev) {
+    var tb = ev.target.closest && ev.target.closest(".tabs button");
+    if (tb) {
+      TAB = tb.getAttribute("data-tab") === "menu" ? "menu" : "list";
+      store("gouwu-tab", TAB);
+      render();
+      if (TAB === "list") window.scrollTo(0, 0);
+      return;
+    }
     var b = ev.target.closest && ev.target.closest(".lang button");
     if (!b) return;
     LANG = b.getAttribute("data-lang") === "en" ? "en" : "zh";
