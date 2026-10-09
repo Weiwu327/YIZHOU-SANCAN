@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>购物清单</title>
-<!-- 一周三餐 · 手机购物页。清单内容在链接 # 后面，只在打开的手机上读取，不会发送到服务器。 -->
+<!-- 一周三餐 · 手机购物页
+     短链接 ?l=<编号>#k=<钥匙>：清单加密后放在本仓库 lists/<编号>.json，钥匙只在 # 后面，只在打开的手机上解密。
+     压缩链接 #z=…，旧链接 #d=…：清单直接写在 # 后面。 -->
 <style>
 :root{--bg:#F3F5F1;--card:#fff;--ink:#1C2520;--muted:#5D6A62;--line:#D9E0DA;--accent:#1E6A51;--accent-ink:#fff;--done:#8C978F;--warn:#C2601A;color-scheme:light}
 @media (prefers-color-scheme:dark){:root{--bg:#111613;--card:#19201C;--ink:#E5EBE7;--muted:#9AA79F;--line:#2B3530;--accent:#63C29C;--accent-ink:#0B1712;--done:#68756D;--warn:#F0995A;color-scheme:dark}}
@@ -53,7 +55,7 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
 </header>
 <div class="list" id="list"><div class="dv" id="dv">已买</div></div>
 <div class="ok" id="ok">全部买齐了</div>
-<div class="err" id="err" hidden>这个链接不完整，读不出清单。请让家里在「一周三餐」里重新点「生成微信链接」再发一次。</div>
+<div class="err" id="err" hidden></div>
 <footer id="foot" hidden>
   <button type="button" class="primary" id="copy">复制购买结果（发回给家里）</button>
   <textarea id="res" hidden readonly></textarea>
@@ -81,17 +83,103 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
     return e;
   }
 
-  var m = location.hash.match(/[#&]d=([^&]+)/), data = null;
-  try { data = m ? decode(m[1]) : null; } catch (e) { data = null; }
-  if (!data || !Array.isArray(data.i)) { $("meta").textContent = ""; $("err").hidden = false; return; }
+  var AL = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  // 只用字母和数字的编码（链接里没有 - _ 之类，微信能完整识别）
+  function unb62(str) {
+    var n = BigInt(0), b62 = BigInt(62);
+    for (var i = 0; i < str.length; i++) {
+      var v = AL.indexOf(str.charAt(i));
+      if (v < 0) throw new Error("bad char");
+      n = n * b62 + BigInt(v);
+    }
+    var hex = n.toString(16);
+    if (hex.length % 2) hex = "0" + hex;
+    var bytes = new Uint8Array(hex.length / 2);
+    for (var j = 0; j < bytes.length; j++) bytes[j] = parseInt(hex.substr(j * 2, 2), 16);
+    return bytes.subarray(1);   // 第一个字节是编码时加的 1，用来保住开头的 0
+  }
+  function utf8(bytes) {
+    if (window.TextDecoder) return new TextDecoder().decode(bytes);
+    var bin = ""; for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return decodeURIComponent(escape(bin));
+  }
+  function fromB64(s) {
+    s = s.replace(/-/g, "+").replace(/_/g, "/");
+    while (s.length % 4) s += "=";
+    var bin = atob(s), bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+  }
+  function inflate(bytes) {
+    if (!window.DecompressionStream) return Promise.reject(new Error("old"));
+    var stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+    return new Response(stream).arrayBuffer().then(function (b) { return new Uint8Array(b); });
+  }
+  function fail(msg) { $("meta").textContent = ""; var e = $("err"); e.textContent = msg; e.hidden = false; }
 
+  // 加密清单放在仓库里：优先从 raw.githubusercontent.com 读（刚上传就能读到），读不到再读本站
+  function fetchList(id) {
+    var owner = location.hostname.split(".")[0], repo = location.pathname.split("/")[1] || "";
+    var urls = ["https://raw.githubusercontent.com/" + owner + "/" + repo + "/main/lists/" + id + ".json", "lists/" + id + ".json"];
+    function tryAt(i) {
+      if (i >= urls.length) return Promise.reject(new Error("notfound"));
+      return fetch(urls[i] + "?t=" + Date.now(), { cache: "no-store" }).then(function (r) {
+        if (!r.ok) throw new Error("http " + r.status);
+        return r.json();
+      }).catch(function () { return tryAt(i + 1); });
+    }
+    return tryAt(0);
+  }
+  function decrypt(blob, key) {
+    if (!(window.crypto && crypto.subtle)) return Promise.reject(new Error("old"));
+    return crypto.subtle.importKey("raw", key, "AES-GCM", false, ["decrypt"]).then(function (k) {
+      return crypto.subtle.decrypt({ name: "AES-GCM", iv: fromB64(blob.iv) }, k, fromB64(blob.ct));
+    }).then(function (buf) { return JSON.parse(utf8(new Uint8Array(buf))); });
+  }
+
+  var q = {}, h = {};
+  location.search.replace(/^\?/, "").split("&").forEach(function (kv) { var p = kv.split("="); if (p[0]) q[p[0]] = p[1] || ""; });
+  location.hash.replace(/^#/, "").split("&").forEach(function (kv) { var p = kv.split("="); if (p[0]) h[p[0]] = p[1] || ""; });
+
+  var load;
+  if (q.l && h.k) {
+    var tries = 0;
+    load = (function attempt() {
+      return fetchList(q.l).catch(function (e) {
+        if (++tries > 12) throw e;   // 刚上传的清单可能要等一会儿，最多等 2 分钟
+        $("meta").textContent = "清单还在上传，稍等几秒自动刷新…";
+        return new Promise(function (r) { setTimeout(r, 10000); }).then(attempt);
+      });
+    })().then(function (blob) { return decrypt(blob, unb62(h.k)); });
+  } else if (h.z) {
+    load = inflate(unb62(h.z)).then(function (b) { return JSON.parse(utf8(b)); });
+  } else if (h.d) {
+    load = Promise.resolve().then(function () { return JSON.parse(utf8(fromB64(h.d))); });
+  } else if (q.l) {
+    load = Promise.reject(new Error("nokey"));
+  } else {
+    load = Promise.reject(new Error("empty"));
+  }
+
+  load.then(function (data) {
+    if (!data || !Array.isArray(data.i)) throw new Error("bad");
+    render(data);
+  }).catch(function (e) {
+    var m = String(e && e.message);
+    if (m === "old") fail("这个手机浏览器的版本太旧，打不开这个清单。请把整条链接复制到手机自带的浏览器里打开。");
+    else if (m === "nokey") fail("链接后半段（# 后面的部分）丢了，读不出清单。请把对方发来的整条链接复制到浏览器里打开，或者让家里重新发一次。");
+    else if (m === "notfound") fail("没找到这份清单。可能还没上传完，请过一分钟再打开；还是不行就让家里重新生成链接。");
+    else fail("这个链接不完整，读不出清单。请让家里在「一周三餐」里重新点「生成微信链接」再发一次。");
+  });
+
+  function render(data) {
   document.title = "购物清单 " + (data.t || "");
   $("meta").textContent = [data.t, data.p ? data.p + " 人" : "", data.d ? "发出于 " + data.d : ""].filter(Boolean).join(" · ");
   $("sum").hidden = false;
   $("foot").hidden = false;
 
   // 每次生成的链接各有自己的 id，勾选记录分开保存
-  var KEY = "gouwu-" + String(data.id || m[1].slice(0, 40)), st = {};
+  var KEY = "gouwu-" + String(data.id || q.l || ""), st = {};
   try { st = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { st = {}; }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { /* 存不了也能用 */ } }
 
@@ -137,6 +225,7 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
       navigator.clipboard.writeText(text).then(function () { btn.textContent = "已复制，到微信里粘贴发回去"; }, show);
     } catch (e) { show(); }
   });
+  }
 })();
 </script>
 </body>
