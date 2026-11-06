@@ -58,8 +58,23 @@ main{display:flex;flex-direction:column;gap:16px;margin-top:14px}
 .meal .ds{display:flex;flex-wrap:wrap;gap:4px 6px;min-width:0}
 .meal .d{background:var(--mb);border-radius:6px;padding:1px 8px;font-size:15px;overflow-wrap:anywhere}
 .meal .none{color:var(--done);font-size:14px}
-.m-b{--mc:#B57A0A;--mb:#FAF0D8}.m-l{--mc:#4F8A35;--mb:#E5F0DC}.m-d{--mc:#3C4C93;--mb:#E2E6F4}
-@media (prefers-color-scheme:dark){.m-b{--mc:#E9B949;--mb:#2F2713}.m-l{--mc:#8DC46E;--mb:#1E2B18}.m-d{--mc:#93A1EA;--mb:#1D2240}}
+.m-b{--mc:#B57A0A;--mb:#FAF0D8}.m-l{--mc:#4F8A35;--mb:#E5F0DC}.m-d{--mc:#3C4C93;--mb:#E2E6F4}.m-f{--mc:#B23A68;--mb:#FBE4EC}
+@media (prefers-color-scheme:dark){.m-b{--mc:#E9B949;--mb:#2F2713}.m-l{--mc:#8DC46E;--mb:#1E2B18}.m-d{--mc:#93A1EA;--mb:#1D2240}.m-f{--mc:#F08AB0;--mb:#3A1A27}}
+button.it{font:inherit;color:inherit;text-align:left;width:100%}
+.it .pr{grid-column:2/4;font-size:14px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+.sum .sp{color:var(--accent)}
+.grp.done h2 .tot{color:var(--ink);font-variant-numeric:tabular-nums}
+.dlg{position:fixed;inset:0;z-index:10;background:rgba(10,16,13,.5);display:flex;align-items:flex-end;justify-content:center}
+.dlg .sheet{background:var(--card);color:var(--ink);width:100%;max-width:520px;border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px;max-height:92vh;overflow:auto}
+.dlg h2{margin:0;font-size:20px}
+.dlg label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.dlg input{font:inherit;font-size:17px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-width:0;width:100%}
+.dlg .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dlg .subt{display:flex;justify-content:space-between;align-items:baseline;background:var(--bg);border-radius:10px;padding:9px 12px;font-size:14px;color:var(--muted)}
+.dlg .subt b{font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums}
+.dlg .btns{display:grid;grid-template-columns:1fr 1.4fr;gap:10px}
+.dlg .e{color:var(--warn);font-size:13px;min-height:1em}
+button.danger{color:var(--warn);border-color:var(--warn);background:transparent}
 .ok{margin-top:12px;border:1px solid var(--accent);color:var(--accent);background:var(--card);border-radius:12px;padding:12px 14px;font-weight:700;text-align:center}
 footer{margin-top:20px;display:flex;flex-direction:column;gap:8px}
 button.big{font:inherit;font-size:15px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:11px;width:100%;cursor:pointer}
@@ -90,6 +105,22 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
 <main id="menu" hidden></main>
 <div class="ok" id="ok" hidden></div>
 <div class="err" id="err" hidden></div>
+<div class="dlg" id="dlg" hidden>
+  <form class="sheet" id="dlgForm" role="dialog" aria-modal="true" aria-labelledby="dlgName" novalidate>
+    <h2 id="dlgName"></h2>
+    <p class="meta" id="dlgNeed" style="margin:0"></p>
+    <div class="row2">
+      <label><span id="lQ"></span><input id="fQ" inputmode="decimal" autocomplete="off"></label>
+      <label><span id="lU"></span><input id="fU" maxlength="10" autocomplete="off"></label>
+    </div>
+    <label><span id="lP"></span><input id="fP" inputmode="decimal" autocomplete="off"></label>
+    <div class="subt"><span id="lT"></span><b id="fT"></b></div>
+    <p class="hint" id="dlgHint" style="margin:0"></p>
+    <div class="e" id="dlgErr" role="alert"></div>
+    <div class="btns"><button type="button" class="big" id="dlgCancel"></button><button type="submit" class="big primary" id="dlgOk"></button></div>
+    <button type="button" class="big danger" id="dlgUndo" hidden></button>
+  </form>
+</div>
 <footer id="foot" hidden>
   <button type="button" class="big primary" id="copy"></button>
   <textarea id="res" hidden readonly></textarea>
@@ -101,18 +132,22 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
   function $(id) { return document.getElementById(id); }
 
   // ---------- 文字 / strings ----------
-  var CATS = ["蔬菜", "菌菇", "水果", "肉类", "禽肉", "水产", "蛋奶", "豆制品", "主食", "调料", "干货", "其他"];
+  var CATS = ["蔬菜", "菌菇", "水果", "肉类", "禽肉", "水产", "蛋奶", "豆制品", "主食", "调料", "干货", "其他", "清洁用品", "个人护理", "日用杂货"];
   var CAT_EN = { "蔬菜": "Vegetables", "菌菇": "Mushrooms", "水果": "Fruit", "肉类": "Meat", "禽肉": "Poultry", "水产": "Seafood",
-    "蛋奶": "Eggs & dairy", "豆制品": "Soy products", "主食": "Staples", "调料": "Seasonings", "干货": "Dry goods", "其他": "Other" };
+    "蛋奶": "Eggs & dairy", "豆制品": "Soy products", "主食": "Staples", "调料": "Seasonings", "干货": "Dry goods", "其他": "Other",
+    "清洁用品": "Cleaning", "个人护理": "Personal care", "日用杂货": "Household" };
   var MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   var T = {
     zh: {
       title: "购物清单", menuTitle: "每日菜单", tabList: "购物清单", tabMenu: "每日菜单", today: "今天", noDish: "—",
-      days: ["周六", "周日", "周一", "周二", "周三", "周四", "周五"], meals: ["早餐", "午餐", "晚餐"],
+      days: ["周六", "周日", "周一", "周二", "周三", "周四", "周五"], meals: ["早餐", "午餐", "晚餐", "水果"],
       noMenu: "这个链接里没有菜单。请让家里在「一周三餐」里重新点「生成微信链接」再发一次。", loading: "正在读取清单…", people: "{n} 人", sent: "发出于 {d}", sum: "还要买 <b>{a}</b> 项 · 已买 <b>{b}</b> 项",
       servings: "{n} 人份", usesFor: "用于 {list}", atHome: "家里还有 {x}", some: "一些", sep: "、", other: "其他",
-      doneHead: "已买（{n}）· 点一下可以撤回", allDone: "全部买齐了", copy: "复制购买结果（发回给家里）", copied: "已复制，到微信里粘贴发回去",
-      copyManual: "长按上面的文字全选、复制，发回给家里", hint: "点一项就算买好了，会移到下面「已买」；再点一下可以撤回。勾选记录保存在这台手机上，关掉再打开还在。",
+      doneHead: "已买（{n}）· 合计 <span class=\"tot\">{m}</span>", sumSpent: " · 已花 <b class=\"sp\">{m}</b>",
+      need: "要买：{q}", qtyLabel: "数量", unitLabel: "单位", priceLabel: "单价（{c}）", subtotal: "小计", dlgHint: "都可以不填，直接点「确认已买」也行。只填单价就当作买了 1 份。",
+      confirm: "确认已买", save: "保存", cancel: "取消", undo: "撤回到未买", undoConfirm: "确定撤回？再点一次", badNumber: "数量和单价只能填数字",
+      resultTotal: "合计：{m}", resultNoPrice: "（{n} 项没填价格）", extraNote: "其他物品", allDone: "全部买齐了", copy: "复制购买结果（发回给家里）", copied: "已复制，到微信里粘贴发回去",
+      copyManual: "长按上面的文字全选、复制，发回给家里", hint: "点一项，可以填上数量和单价（也可以不填），点「确认已买」后移到下面「已买」。点已买的一项可以修改或撤回。记录保存在这台手机上，关掉再打开还在。",
       resultTitle: "购物结果 {range}", resultBought: "已买（{n}）：{list}", resultNot: "没买到（{n}）：{list}", none: "无", empty: "这一周没有要买的东西。",
       uploading: "清单还在上传，稍等几秒自动刷新…",
       errOld: "这个手机浏览器的版本太旧，打不开这个清单。请把整条链接复制到手机自带的浏览器里打开。",
@@ -122,11 +157,14 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
     },
     en: {
       title: "Shopping list", menuTitle: "Daily menu", tabList: "Shopping list", tabMenu: "Daily menu", today: "Today", noDish: "—",
-      days: ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"], meals: ["Breakfast", "Lunch", "Dinner"],
+      days: ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"], meals: ["Breakfast", "Lunch", "Dinner", "Fruit"],
       noMenu: "This link doesn’t include the menu. Ask for a new link from the meal planner.", loading: "Loading the list…", people: "{n} people", sent: "sent {d}", sum: "To buy <b>{a}</b> · Bought <b>{b}</b>",
       servings: "{n} servings", usesFor: "For {list}", atHome: "At home: {x}", some: "some", sep: ", ", other: "Other",
-      doneHead: "Bought ({n}) · tap to undo", allDone: "Everything’s bought", copy: "Copy result (send it back home)", copied: "Copied — paste it into WeChat to send back",
-      copyManual: "Press and hold the text above, select all, copy and send it back", hint: "Tap an item once it’s in your basket — it moves down to “Bought”. Tap again to undo. Ticks are saved on this phone, even if you close the page.",
+      doneHead: "Bought ({n}) · total <span class=\"tot\">{m}</span>", sumSpent: " · spent <b class=\"sp\">{m}</b>",
+      need: "Need: {q}", qtyLabel: "Quantity", unitLabel: "Unit", priceLabel: "Unit price ({c})", subtotal: "Subtotal", dlgHint: "All optional — you can just tap “Mark as bought”. A price alone counts as one unit.",
+      confirm: "Mark as bought", save: "Save", cancel: "Cancel", undo: "Move back to “to buy”", undoConfirm: "Move back? Tap again", badNumber: "Quantity and price must be numbers",
+      resultTotal: "Total: {m}", resultNoPrice: " ({n} without a price)", resultNoPrice_1: " (1 without a price)", extraNote: "Other item", allDone: "Everything’s bought", copy: "Copy result (send it back home)", copied: "Copied — paste it into WeChat to send back",
+      copyManual: "Press and hold the text above, select all, copy and send it back", hint: "Tap an item, optionally fill in quantity and price, then “Mark as bought” to move it down to “Bought”. Tap a bought item to edit or undo. Everything is saved on this phone, even if you close the page.",
       resultTitle: "Shopping result {range}", resultBought: "Bought ({n}): {list}", resultNot: "Not bought ({n}): {list}", none: "none", empty: "Nothing to buy this week.",
       uploading: "The list is still uploading — this refreshes in a few seconds…",
       errOld: "This phone’s browser is too old to open the list. Copy the whole link into the phone’s own browser.",
@@ -205,11 +243,13 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
   function normalize(d) {
     return d.i.map(function (row, k) {
       if (Array.isArray(row)) return { k: k, name: String(row[0] || ""), qtyText: String(row[1] || ""), cat: String(row[2] || ""), usesText: String(row[3] || ""), left: row[4] ? String(row[4]) : null };
+      if (row.x) return { k: k, name: String(row.n || ""), x: 1, qt: String(row.qt || ""), cat: row.c || "其他", dl: [], left: null };
       return { k: k, name: String(row.n || ""), q: row.q, u: row.u || "", s: row.s || 0, cat: row.c || "", dl: row.dl || [], left: row.l };
     });
   }
   function qty(it) {
     if (it.qtyText != null) return it.qtyText;
+    if (it.x) return it.qt;
     var a = it.q != null ? fmt(it.q) + (it.u ? " " + it.u : "") : "";
     if (it.s) a += (a ? " + " : "") + tr("servings", { n: it.s });
     return a;
@@ -217,7 +257,25 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
   function note(it) {
     var home = it.left != null ? '<span class="short">' + esc(tr("atHome", { x: it.left || tr("some") })) + "</span> · " : "";
     if (it.usesText != null) return home + esc(it.usesText);
+    if (it.x) return esc(tr("extraNote"));
     return home + esc(it.dl.length ? tr("usesFor", { list: it.dl.join(tr("sep")) }) : "");
+  }
+  // ---- 已买：数量、单价、小计 ----
+  function cur() { return (data && data.cur) || "€"; }
+  function money(n) { return cur() + (Math.round(n * 100) / 100).toFixed(2); }
+  function info(k) { var b = st[k]; return b && typeof b === "object" ? b : (b ? {} : null); }
+  function lineTotal(b) { if (!b || b.p == null) return null; return b.q != null ? b.q * b.p : b.p; }
+  function detail(b) {
+    if (!b) return "";
+    var qt = b.q != null ? fmt(b.q) + (b.u ? " " + b.u : "") : "";
+    if (b.q != null && b.p != null) return qt + " × " + money(b.p) + " = " + money(b.q * b.p);
+    if (b.p != null) return money(b.p);
+    return qt;
+  }
+  function spentInfo() {
+    var sum = 0, noPrice = 0;
+    items.forEach(function (it) { var b = info(it.k); if (!b) return; var tt = lineTotal(b); if (tt == null) noPrice++; else sum += tt; });
+    return { sum: sum, noPrice: noPrice };
   }
   function catLabel(c) { return LANG === "en" ? (CAT_EN[c] || c || tr("other")) : (c || tr("other")); }
   function md(dt) { return LANG === "en" ? MONTHS_EN[dt.getMonth()] + " " + dt.getDate() : (dt.getMonth() + 1) + "月" + dt.getDate() + "日"; }
@@ -244,7 +302,8 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
       h += '<section class="day' + (d < 2 ? " weekend" : "") + (isToday ? " today" : "") + '"' + (isToday ? ' id="today"' : "") + ">" +
         '<h2><span class="dn">' + esc(tr("days")[d]) + "</span>" + (dt ? '<span class="dt">' + (dt.getMonth() + 1) + "/" + dt.getDate() + "</span>" : "") +
         (isToday ? '<em class="tag">' + esc(tr("today")) + "</em>" : "") + "</h2>";
-      ["b", "l", "d"].forEach(function (k, mi) {
+      var keys = data.m[d] && data.m[d].length > 3 ? ["b", "l", "d", "f"] : ["b", "l", "d"];   // 旧链接没有水果
+      keys.forEach(function (k, mi) {
         var dishes = (data.m[d] && data.m[d][mi]) || [];
         h += '<div class="meal m-' + k + '"><span class="ml">' + esc(tr("meals")[mi]) + '</span><span class="ds">' +
           (dishes.length ? dishes.map(function (n) { return '<span class="d">' + esc(n) + "</span>"; }).join("") : '<span class="none">' + esc(tr("noDish")) + "</span>") +
@@ -257,10 +316,11 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
 
   // ---------- 显示 / render ----------
   function itemHtml(it) {
-    var on = !!st[it.k];
-    return '<label class="it' + (on ? " on" : "") + '"><input type="checkbox" data-k="' + it.k + '"' + (on ? " checked" : "") + '>' +
+    var on = !!st[it.k], det = on ? detail(info(it.k)) : "";
+    return '<button type="button" class="it' + (on ? " on" : "") + '" data-k="' + it.k + '" aria-pressed="' + on + '">' +
       '<span class="tk" aria-hidden="true"></span><span class="nm">' + esc(it.name) + '</span><span class="qt">' + esc(qty(it)) + "</span>" +
-      '<span class="nt">' + note(it) + "</span></label>";
+      (det ? '<span class="pr">' + esc(det) + "</span>" : "") +
+      '<span class="nt">' + note(it) + "</span></button>";
   }
   function render() {
     document.documentElement.lang = LANG === "en" ? "en" : "zh-CN";
@@ -270,7 +330,8 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
     document.title = tr(TAB === "menu" && Array.isArray(data.m) ? "menuTitle" : "title") + " " + range();
     $("meta").textContent = [range(), data.p ? tr("people", { n: data.p }) : "", data.d ? tr("sent", { d: data.d }) : ""].filter(Boolean).join(" · ");
     var todo = items.filter(function (it) { return !st[it.k]; }), done = items.filter(function (it) { return st[it.k]; });
-    $("sum").innerHTML = tr("sum", { a: todo.length, b: done.length });
+    var sp = spentInfo();
+    $("sum").innerHTML = tr("sum", { a: todo.length, b: done.length }) + (done.length ? tr("sumSpent", { m: esc(money(sp.sum)) }) : "");
     $("sum").hidden = false;
     // 没买的按类别分组（类别顺序跟家里的清单一致），买好的放到最下面
     var groups = {}, order = [];
@@ -279,7 +340,7 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
     var h = order.map(function (c) {
       return '<section class="grp"><h2>' + esc(catLabel(c)) + ' <span class="n">' + groups[c].length + "</span></h2>" + groups[c].map(itemHtml).join("") + "</section>";
     }).join("");
-    if (done.length) h += '<section class="grp done"><h2>' + esc(tr("doneHead", { n: done.length })) + "</h2>" + done.map(itemHtml).join("") + "</section>";
+    if (done.length) h += '<section class="grp done"><h2>' + tr("doneHead", { n: done.length, m: esc(money(sp.sum)) }) + (sp.noPrice ? esc(tr("resultNoPrice", { n: sp.noPrice })) : "") + "</h2>" + done.map(itemHtml).join("") + "</section>";
     if (!items.length) h = '<p class="meta">' + esc(tr("empty")) + "</p>";
     $("list").innerHTML = h;
     $("ok").textContent = tr("allDone");
@@ -305,14 +366,52 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
     }
   }
 
-  document.addEventListener("change", function (ev) {
-    var k = ev.target && ev.target.getAttribute("data-k");
-    if (k == null) return;
-    st[k] = ev.target.checked;
+  // ---- 确认购买的小窗 ----
+  var dlgK = null, armUndo = false;
+  function num(v) { v = String(v || "").trim().replace(",", "."); if (v === "") return null; var n = Number(v); return isFinite(n) && n >= 0 ? n : NaN; }
+  function updTot() {
+    var q0 = num($("fQ").value), p0 = num($("fP").value);
+    var tt = p0 != null && !isNaN(p0) ? (q0 != null && !isNaN(q0) ? q0 * p0 : p0) : null;
+    $("fT").textContent = tt == null ? "—" : money(tt);
+  }
+  function openDlg(k) {
+    var it = items[k], b = info(k) || {};
+    dlgK = k; armUndo = false;
+    $("dlgName").textContent = it.name;
+    $("dlgNeed").textContent = qty(it) ? tr("need", { q: qty(it) }) : "";
+    $("lQ").textContent = tr("qtyLabel"); $("lU").textContent = tr("unitLabel"); $("lP").textContent = tr("priceLabel", { c: cur() }); $("lT").textContent = tr("subtotal");
+    $("fQ").value = b.q != null ? b.q : ""; $("fU").value = b.u != null ? b.u : (it.u || ""); $("fP").value = b.p != null ? b.p : "";
+    $("dlgHint").textContent = tr("dlgHint"); $("dlgErr").textContent = "";
+    $("dlgCancel").textContent = tr("cancel");
+    $("dlgOk").textContent = st[k] ? tr("save") : tr("confirm");
+    $("dlgUndo").hidden = !st[k]; $("dlgUndo").textContent = tr("undo");
+    updTot();
+    $("dlg").hidden = false;
+  }
+  function closeDlg() { dlgK = null; $("dlg").hidden = true; }
+  $("fQ").addEventListener("input", updTot);
+  $("fP").addEventListener("input", updTot);
+  $("dlgCancel").addEventListener("click", closeDlg);
+  $("dlg").addEventListener("click", function (ev) { if (ev.target === $("dlg")) closeDlg(); });
+  $("dlgForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var q0 = num($("fQ").value), p0 = num($("fP").value);
+    if ((q0 != null && isNaN(q0)) || (p0 != null && isNaN(p0))) { $("dlgErr").textContent = tr("badNumber"); return; }
+    st[dlgK] = { q: q0, u: $("fU").value.trim(), p: p0 };
     store(KEY, JSON.stringify(st));
-    render();
+    closeDlg(); render();
   });
+  $("dlgUndo").addEventListener("click", function () {
+    if (!armUndo) { armUndo = true; $("dlgUndo").textContent = tr("undoConfirm"); return; }
+    st[dlgK] = false;
+    store(KEY, JSON.stringify(st));
+    closeDlg(); render();
+  });
+  document.addEventListener("keydown", function (ev) { if (ev.key === "Escape" && !$("dlg").hidden) closeDlg(); });
+
   document.addEventListener("click", function (ev) {
+    var itb = ev.target.closest && ev.target.closest("button.it");
+    if (itb) { openDlg(Number(itb.getAttribute("data-k"))); return; }
     var tb = ev.target.closest && ev.target.closest(".tabs button");
     if (tb) {
       TAB = tb.getAttribute("data-tab") === "menu" ? "menu" : "list";
@@ -328,11 +427,17 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
     render();
   });
   $("copy").addEventListener("click", function () {
-    var got = [], no = [];
-    items.forEach(function (it) { (st[it.k] ? got : no).push(it.name); });
+    var got = [], no = [], sp = spentInfo();
+    var lp = LANG === "en" ? " (" : "（", rp = LANG === "en" ? ")" : "）";
+    items.forEach(function (it) {
+      if (!st[it.k]) { no.push(it.name); return; }
+      var det = detail(info(it.k));
+      got.push(it.name + (det ? lp + det + rp : ""));
+    });
     var text = tr("resultTitle", { range: range() }) + "\n" +
       tr("resultBought", { n: got.length, list: got.join(tr("sep")) || tr("none") }) + "\n" +
-      tr("resultNot", { n: no.length, list: no.join(tr("sep")) || tr("none") });
+      tr("resultNot", { n: no.length, list: no.join(tr("sep")) || tr("none") }) +
+      (got.length ? "\n" + tr("resultTotal", { m: money(sp.sum) }) + (sp.noPrice ? tr("resultNoPrice", { n: sp.noPrice }) : "") : "");
     var box = $("res"), btn = $("copy");
     function show() { box.value = text; box.hidden = false; box.focus(); box.select(); btn.textContent = tr("copyManual"); }
     try { navigator.clipboard.writeText(text).then(function () { btn.textContent = tr("copied"); }, show); } catch (e) { show(); }
