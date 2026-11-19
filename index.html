@@ -77,6 +77,27 @@ button.it{font:inherit;color:inherit;text-align:left;width:100%}
 button.danger{color:var(--warn);border-color:var(--warn);background:transparent}
 button.addbtn{font:inherit;font-size:16px;font-weight:700;color:var(--accent);background:transparent;border:1.5px dashed var(--accent);border-radius:12px;padding:12px 14px;width:100%;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .nt .mine{color:var(--accent)}
+.nm .nl,.dlg h2 .nl{font-weight:400;font-size:14px;color:var(--muted);margin-left:7px}
+.dlg h2 .nl{font-size:15px}
+.lst{display:flex;flex-direction:column;gap:10px}
+.fold{display:flex;align-items:center;gap:8px;width:100%;font:inherit;font-size:16px;font-weight:700;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--line);padding:6px 2px 9px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent}
+.fold .chev{flex:none;width:9px;height:9px;border:solid var(--muted);border-width:0 2px 2px 0;transform:rotate(45deg);margin:0 3px 4px 3px;transition:transform .15s}
+.fold[aria-expanded="false"] .chev{transform:rotate(-45deg);margin-bottom:0}
+.fold .n{color:var(--muted);font-weight:400}
+.fold .ftot{margin-left:auto;color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap}
+.fbody{display:flex;flex-direction:column;gap:16px}
+.fbody.rows{gap:8px}
+.vhint{margin:0 2px;color:var(--muted);font-size:13px}
+.vrow{display:flex;gap:8px;align-items:stretch}
+.vrow .it{flex:1;min-width:0}
+.vrow .it.on .nm{text-decoration:none;color:var(--ink)}
+.lst.chk .vrow .it{opacity:.7}
+.vf{flex:none;width:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:inherit;font-size:12px;font-weight:700;color:var(--accent);background:var(--card);border:1.5px solid var(--accent);border-radius:12px;padding:6px 2px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.vf .bx{width:20px;height:20px;border:2px solid var(--accent);border-radius:5px;display:grid;place-items:center}
+.vf .bx::after{content:"";width:5px;height:10px;border:solid var(--accent);border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px);opacity:0}
+.vf[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.vf[aria-pressed="true"] .bx{background:var(--accent-ink);border-color:var(--accent-ink)}
+.vf[aria-pressed="true"] .bx::after{opacity:1}
 .ok{margin-top:12px;border:1px solid var(--accent);color:var(--accent);background:var(--card);border-radius:12px;padding:12px 14px;font-weight:700;text-align:center}
 footer{margin-top:20px;display:flex;flex-direction:column;gap:8px}
 button.big{font:inherit;font-size:15px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:11px;width:100%;cursor:pointer}
@@ -152,9 +173,11 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
       need: "要买：{q}", qtyLabel: "数量", unitLabel: "单位", priceLabel: "单价（{c}）", subtotal: "小计", dlgHint: "都可以不填，直接点「确认已买」也行。只填单价就当作买了 1 份。",
       confirm: "确认已买", save: "保存", cancel: "取消", undo: "撤回到未买", undoConfirm: "确定撤回？再点一次", badNumber: "数量和单价只能填数字",
       resultTotal: "合计：{m}", resultNoPrice: "（{n} 项没填价格）", extraNote: "其他物品", allDone: "全部买齐了", copy: "复制购买结果（发回给家里）", copied: "已复制，到微信里粘贴发回去",
-      copyManual: "长按上面的文字全选、复制，发回给家里", hint: "点一项，可以填上数量和单价（也可以不填），点「确认已买」后移到下面「已买」。点已买的一项可以修改或撤回。清单上没有的东西，点「＋ 添加清单外的商品」自己加。记录保存在这台手机上，关掉再打开还在。",
+      copyManual: "长按上面的文字全选、复制，发回给家里", hint: "点一项，可以填上数量和单价（也可以不填），点「确认已买」后移到「已买 · 待核对」。结账后对着小票点「核对」。点清单标题可以收起或展开。清单上没有的东西，点「＋ 添加清单外的商品」自己加。记录保存在这台手机上，关掉再打开还在。",
       addBtn: "＋ 添加清单外的商品", addTitle: "添加商品", nameLabel: "名称", addHint: "只有名称必填，数量、单价都可以不填。", later: "还没买，先加到清单里", saveLater: "保存（还没买）",
       del: "删除这一项", delConfirm: "确定删除？再点一次", needName: "先填名称", addedHead: "自己加的", addedNote: "自己加的", resultAdded: "另外买的（{n}）：{list}",
+      listTodo: "还要买", listDone: "已买 · 待核对", listChk: "已核对", vBtn: "核对", vDone: "已核对", vAria: "{n}：和小票一致", vUndoAria: "{n}：取消核对",
+      vHint: "结账后对着小票逐项看：名称、数量、价格都一致，就点右边的「核对」，它会移到下面「已核对」。", noPriceN: "{n} 项没填价格。", resultChecked: " · 已对小票 {a}/{b} 项",
       resultTitle: "购物结果 {range}", resultBought: "已买（{n}）：{list}", resultNot: "没买到（{n}）：{list}", none: "无", empty: "这一周没有要买的东西。",
       uploading: "清单还在上传，稍等几秒自动刷新…",
       errOld: "这个手机浏览器的版本太旧，打不开这个清单。请把整条链接复制到手机自带的浏览器里打开。",
@@ -171,9 +194,11 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
       need: "Need: {q}", qtyLabel: "Quantity", unitLabel: "Unit", priceLabel: "Unit price ({c})", subtotal: "Subtotal", dlgHint: "All optional — you can just tap “Mark as bought”. A price alone counts as one unit.",
       confirm: "Mark as bought", save: "Save", cancel: "Cancel", undo: "Move back to “to buy”", undoConfirm: "Move back? Tap again", badNumber: "Quantity and price must be numbers",
       resultTotal: "Total: {m}", resultNoPrice: " ({n} without a price)", resultNoPrice_1: " (1 without a price)", extraNote: "Other item", allDone: "Everything’s bought", copy: "Copy result (send it back home)", copied: "Copied — paste it into WeChat to send back",
-      copyManual: "Press and hold the text above, select all, copy and send it back", hint: "Tap an item, optionally fill in quantity and price, then “Mark as bought” to move it down to “Bought”. Tap a bought item to edit or undo. For something not on the list, tap “+ Add something not on the list”. Everything is saved on this phone, even if you close the page.",
+      copyManual: "Press and hold the text above, select all, copy and send it back", hint: "Tap an item, optionally fill in quantity and price, then “Mark as bought” to move it to “Bought · to check”. After paying, tap “Check” for each item that matches the receipt. Tap a list title to fold or unfold it. For something not on the list, tap “+ Add something not on the list”. Everything is saved on this phone, even if you close the page.",
       addBtn: "+ Add something not on the list", addTitle: "Add an item", nameLabel: "Name", addHint: "Only the name is needed — quantity and price are optional.", later: "Not bought yet — add it to the list", saveLater: "Save (not bought yet)",
       del: "Delete this item", delConfirm: "Delete? Tap again", needName: "Enter a name first", addedHead: "Added by you", addedNote: "Added by you", resultAdded: "Extra items ({n}): {list}",
+      listTodo: "To buy", listDone: "Bought · to check", listChk: "Checked", vBtn: "Check", vDone: "Checked", vAria: "{n}: matches the receipt", vUndoAria: "{n}: uncheck",
+      vHint: "After paying, go through the receipt: if name, quantity and price match, tap “Check” on the right and the item moves down to “Checked”.", noPriceN: "{n} without a price.", noPriceN_1: "1 without a price.", resultChecked: " · {a}/{b} checked against the receipt",
       resultTitle: "Shopping result {range}", resultBought: "Bought ({n}): {list}", resultNot: "Not bought ({n}): {list}", none: "none", empty: "Nothing to buy this week.",
       uploading: "The list is still uploading — this refreshes in a few seconds…",
       errOld: "This phone’s browser is too old to open the list. Copy the whole link into the phone’s own browser.",
@@ -244,7 +269,7 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
   }
 
   // ---------- 状态 / state ----------
-  var data = null, items = [], added = [], st = {}, KEY = "", errKey = "", TAB = stored("gouwu-tab") === "menu" ? "menu" : "list", scrolledToday = false;
+  var data = null, items = [], added = [], st = {}, fold = {}, KEY = "", errKey = "", TAB = stored("gouwu-tab") === "menu" ? "menu" : "list", scrolledToday = false;
   function stored(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function store(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* 存不了也能用 */ } }
 
@@ -252,8 +277,8 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
   function normalize(d) {
     return d.i.map(function (row, k) {
       if (Array.isArray(row)) return { k: k, name: String(row[0] || ""), qtyText: String(row[1] || ""), cat: String(row[2] || ""), usesText: String(row[3] || ""), left: row[4] ? String(row[4]) : null };
-      if (row.x) return { k: k, name: String(row.n || ""), x: 1, qt: String(row.qt || ""), cat: row.c || "其他", dl: [], left: null };
-      return { k: k, name: String(row.n || ""), q: row.q, u: row.u || "", s: row.s || 0, cat: row.c || "", dl: row.dl || [], left: row.l };
+      if (row.x) return { k: k, name: String(row.n || ""), nl: String(row.nl || ""), x: 1, qt: String(row.qt || ""), cat: row.c || "其他", dl: [], left: null };
+      return { k: k, name: String(row.n || ""), nl: String(row.nl || ""), q: row.q, u: row.u || "", s: row.s || 0, cat: row.c || "", dl: row.dl || [], left: row.l };
     });
   }
   // 买菜的人在手机上自己加的商品：存在这台手机上（KEY + "-add"），键是 "a" + 编号
@@ -290,10 +315,21 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
     if (b.p != null) return money(b.p);
     return qt;
   }
-  function spentInfo() {
+  function spentInfo(list) {
     var sum = 0, noPrice = 0;
-    all().forEach(function (it) { var b = info(it.k); if (!b) return; var tt = lineTotal(b); if (tt == null) noPrice++; else sum += tt; });
+    (list || all()).forEach(function (it) { var b = info(it.k); if (!b) return; var tt = lineTotal(b); if (tt == null) noPrice++; else sum += tt; });
     return { sum: sum, noPrice: noPrice };
+  }
+  // ---- 和小票核对：st[k].v = 1 ----
+  function isV(k) { var b = st[k]; return !!(b && typeof b === "object" && b.v); }
+  function toggleV(k) {
+    var b = st[k];
+    if (!b) return;
+    var c = {};
+    if (typeof b === "object") Object.keys(b).forEach(function (x) { c[x] = b[x]; });
+    if (c.v) delete c.v; else c.v = 1;
+    st[k] = c;
+    saveAll(); render();
   }
   function catLabel(c) { return LANG === "en" ? (CAT_EN[c] || c || tr("other")) : (c || tr("other")); }
   function md(dt) { return LANG === "en" ? MONTHS_EN[dt.getMonth()] + " " + dt.getDate() : (dt.getMonth() + 1) + "月" + dt.getDate() + "日"; }
@@ -336,9 +372,22 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
   function itemHtml(it) {
     var on = !!st[it.k], det = on ? detail(info(it.k)) : "", nt = note(it);
     return '<button type="button" class="it' + (on ? " on" : "") + '" data-k="' + it.k + '" aria-pressed="' + on + '">' +
-      '<span class="tk" aria-hidden="true"></span><span class="nm">' + esc(it.name) + '</span><span class="qt">' + esc(qty(it)) + "</span>" +
+      '<span class="tk" aria-hidden="true"></span><span class="nm">' + esc(it.name) + (it.nl ? '<span class="nl" lang="nl">' + esc(it.nl) + "</span>" : "") + '</span><span class="qt">' + esc(qty(it)) + "</span>" +
       (det ? '<span class="pr">' + esc(det) + "</span>" : "") +
       (nt ? '<span class="nt">' + nt + "</span>" : "") + "</button>";
+  }
+  function rowHtml(it) {
+    var v = isV(it.k);
+    return '<div class="vrow">' + itemHtml(it) +
+      '<button type="button" class="vf" data-v="' + esc(String(it.k)) + '" aria-pressed="' + v + '" aria-label="' + esc(tr(v ? "vUndoAria" : "vAria", { n: it.name })) + '">' +
+      '<span class="bx" aria-hidden="true"></span>' + esc(tr(v ? "vDone" : "vBtn")) + "</button></div>";
+  }
+  // 可以收起的清单：todo（还要买）、done（已买 · 待核对）、chk（已核对）
+  function foldSec(id, label, n, tot, body, rows) {
+    var open = !fold[id];
+    return '<section class="lst ' + id + '"><button type="button" class="fold" data-fold="' + id + '" aria-expanded="' + open + '">' +
+      '<span class="chev" aria-hidden="true"></span>' + esc(label) + ' <span class="n">' + n + "</span>" + (tot ? '<span class="ftot">' + esc(tot) + "</span>" : "") + "</button>" +
+      '<div class="fbody' + (rows ? " rows" : "") + '"' + (open ? "" : " hidden") + ">" + body + "</div></section>";
   }
   function render() {
     document.documentElement.lang = LANG === "en" ? "en" : "zh-CN";
@@ -347,22 +396,32 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
     if (!data) { if (errKey) { $("err").textContent = tr(errKey); $("err").hidden = false; $("meta").textContent = ""; } else $("meta").textContent = tr("loading"); return; }
     document.title = tr(TAB === "menu" && Array.isArray(data.m) ? "menuTitle" : "title") + " " + range();
     $("meta").textContent = [range(), data.p ? tr("people", { n: data.p }) : "", data.d ? tr("sent", { d: data.d }) : ""].filter(Boolean).join(" · ");
-    var every = all(), todo = every.filter(function (it) { return !st[it.k]; }), done = every.filter(function (it) { return st[it.k]; });
+    var every = all(), todo = every.filter(function (it) { return !st[it.k]; }), bought = every.filter(function (it) { return st[it.k]; });
+    var done = bought.filter(function (it) { return !isV(it.k); }), chk = bought.filter(function (it) { return isV(it.k); });
     var sp = spentInfo();
-    $("sum").innerHTML = tr("sum", { a: todo.length, b: done.length }) + (done.length ? tr("sumSpent", { m: esc(money(sp.sum)) }) : "");
+    $("sum").innerHTML = tr("sum", { a: todo.length, b: bought.length }) + (bought.length ? tr("sumSpent", { m: esc(money(sp.sum)) }) : "");
     $("sum").hidden = false;
     // 没买的按类别分组（类别顺序跟家里的清单一致），买好的放到最下面
     var groups = {}, order = [];
     todo.forEach(function (it) { if (it.add) return; if (!groups[it.cat]) { groups[it.cat] = []; order.push(it.cat); } groups[it.cat].push(it); });
     order.sort(function (a, b) { var x = CATS.indexOf(a), y = CATS.indexOf(b); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y); });
-    var h = order.map(function (c) {
+    var tb = order.map(function (c) {
       return '<section class="grp"><h2>' + esc(catLabel(c)) + ' <span class="n">' + groups[c].length + "</span></h2>" + groups[c].map(itemHtml).join("") + "</section>";
     }).join("");
     var mine = todo.filter(function (it) { return it.add; });
-    if (mine.length) h += '<section class="grp"><h2>' + esc(tr("addedHead")) + ' <span class="n">' + mine.length + "</span></h2>" + mine.map(itemHtml).join("") + "</section>";
+    if (mine.length) tb += '<section class="grp"><h2>' + esc(tr("addedHead")) + ' <span class="n">' + mine.length + "</span></h2>" + mine.map(itemHtml).join("") + "</section>";
+    var h = todo.length ? foldSec("todo", tr("listTodo"), todo.length, "", tb, false) : "";
     if (!items.length && !added.length) h = '<p class="meta">' + esc(tr("empty")) + "</p>";
     h += '<button type="button" class="addbtn" id="addBtn">' + esc(tr("addBtn")) + "</button>";
-    if (done.length) h += '<section class="grp done"><h2>' + tr("doneHead", { n: done.length, m: esc(money(sp.sum)) }) + (sp.noPrice ? esc(tr("resultNoPrice", { n: sp.noPrice })) : "") + "</h2>" + done.map(itemHtml).join("") + "</section>";
+    if (done.length) {
+      var s1 = spentInfo(done);
+      h += foldSec("done", tr("listDone"), done.length, money(s1.sum),
+        '<p class="vhint">' + esc(tr("vHint")) + (s1.noPrice ? " " + esc(tr("noPriceN", { n: s1.noPrice })) : "") + "</p>" + done.map(rowHtml).join(""), true);
+    }
+    if (chk.length) {
+      var s2 = spentInfo(chk);
+      h += foldSec("chk", tr("listChk"), chk.length, money(s2.sum), (s2.noPrice ? '<p class="vhint">' + esc(tr("noPriceN", { n: s2.noPrice })) + "</p>" : "") + chk.map(rowHtml).join(""), true);
+    }
     $("list").innerHTML = h;
     $("ok").textContent = tr("allDone");
     $("ok").hidden = !(every.length && !todo.length);
@@ -402,7 +461,7 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
     dlgK = it ? String(it.k) : null; armUndo = false; armDel = false;
     var on = !!(it && st[it.k]);
     var b = (on && info(it.k)) || (it && it.add ? { q: it.q, u: it.u, p: it.p } : {});
-    $("dlgName").textContent = it ? it.name : tr("addTitle");
+    $("dlgName").innerHTML = esc(it ? it.name : tr("addTitle")) + (it && it.nl ? '<span class="nl" lang="nl">' + esc(it.nl) + "</span>" : "");
     var need = it && !it.add ? qty(it) : "";
     $("dlgNeed").textContent = need ? tr("need", { q: need }) : ""; $("dlgNeed").hidden = !need;
     $("rowN").hidden = dlgMode === "item"; $("lN").textContent = tr("nameLabel"); $("fN").value = it && it.add ? it.name : "";
@@ -436,7 +495,7 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
       if (!rec) return;
     }
     rec.n = f.n; rec.q = f.q; rec.u = f.u; rec.p = f.p;
-    if (bought) st[dlgK] = { q: f.q, u: f.u, p: f.p };
+    if (bought) { var kv = isV(dlgK); st[dlgK] = { q: f.q, u: f.u, p: f.p }; if (kv) st[dlgK].v = 1; }
   }
   $("fQ").addEventListener("input", updTot);
   $("fP").addEventListener("input", updTot);
@@ -447,7 +506,7 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
     ev.preventDefault();
     var f = readForm();
     if (!f) return;
-    if (dlgMode === "item") st[dlgK] = { q: f.q, u: f.u, p: f.p };
+    if (dlgMode === "item") { var kv = isV(dlgK); st[dlgK] = { q: f.q, u: f.u, p: f.p }; if (kv) st[dlgK].v = 1; }
     else saveAdded(f, true);
     saveAll();
     closeDlg(); render();
@@ -478,6 +537,16 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
     var itb = ev.target.closest && ev.target.closest("button.it");
     if (itb) { openDlg(itb.getAttribute("data-k")); return; }
     if (ev.target.closest && ev.target.closest("#addBtn")) { openDlg(null); return; }
+    var vb = ev.target.closest && ev.target.closest("button.vf");
+    if (vb) { toggleV(vb.getAttribute("data-v")); return; }
+    var fb = ev.target.closest && ev.target.closest("button.fold");
+    if (fb) {
+      var fid = fb.getAttribute("data-fold");
+      fold[fid] = !fold[fid];
+      store("gouwu-fold", JSON.stringify(fold));
+      render();
+      return;
+    }
     var tb = ev.target.closest && ev.target.closest(".tabs button");
     if (tb) {
       TAB = tb.getAttribute("data-tab") === "menu" ? "menu" : "list";
@@ -493,18 +562,19 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
     render();
   });
   $("copy").addEventListener("click", function () {
-    var got = [], no = [], extra = [], sp = spentInfo();
+    var got = [], no = [], extra = [], nChk = 0, sp = spentInfo();
     var lp = LANG === "en" ? " (" : "（", rp = LANG === "en" ? ")" : "）";
     all().forEach(function (it) {
       if (!st[it.k]) { no.push(it.name); return; }
       var det = detail(info(it.k));
+      if (isV(it.k)) nChk++;
       (it.add ? extra : got).push(it.name + (det ? lp + det + rp : ""));
     });
     var text = tr("resultTitle", { range: range() }) + "\n" +
       tr("resultBought", { n: got.length, list: got.join(tr("sep")) || tr("none") }) + "\n" +
       (extra.length ? tr("resultAdded", { n: extra.length, list: extra.join(tr("sep")) }) + "\n" : "") +
       tr("resultNot", { n: no.length, list: no.join(tr("sep")) || tr("none") }) +
-      (got.length || extra.length ? "\n" + tr("resultTotal", { m: money(sp.sum) }) + (sp.noPrice ? tr("resultNoPrice", { n: sp.noPrice }) : "") : "");
+      (got.length || extra.length ? "\n" + tr("resultTotal", { m: money(sp.sum) }) + (sp.noPrice ? tr("resultNoPrice", { n: sp.noPrice }) : "") + (nChk ? tr("resultChecked", { a: nChk, b: got.length + extra.length }) : "") : "");
     var box = $("res"), btn = $("copy");
     function show() { box.value = text; box.hidden = false; box.focus(); box.select(); btn.textContent = tr("copyManual"); }
     try { navigator.clipboard.writeText(text).then(function () { btn.textContent = tr("copied"); }, show); } catch (e) { show(); }
@@ -543,6 +613,7 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
     items = normalize(d);
     KEY = "gouwu-" + String(d.id || q.l || "");
     try { st = JSON.parse(stored(KEY) || "{}") || {}; } catch (e) { st = {}; }
+    try { fold = JSON.parse(stored("gouwu-fold") || "{}") || {}; } catch (e) { fold = {}; }
     try { added = JSON.parse(stored(KEY + "-add") || "[]"); if (!Array.isArray(added)) added = []; } catch (e) { added = []; }
     added = added.filter(function (r) { return r && r.id && r.n; });
     if (!savedLang && (d.lang === "en" || d.lang === "zh")) LANG = d.lang;   // 第一次打开时跟发送人的语言一样
