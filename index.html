@@ -104,6 +104,7 @@ button.big{font:inherit;font-size:15px;border:1px solid var(--line);background:v
 button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
 textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--card);color:var(--ink)}
 .hint{color:var(--muted);font-size:12px;text-align:center}
+.ver{color:var(--done);font-size:11px;text-align:center}
 .err{margin-top:24px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
 [hidden]{display:none!important}
 </style>
@@ -151,10 +152,14 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
   <button type="button" class="big primary" id="copy"></button>
   <textarea id="res" hidden readonly></textarea>
   <div class="hint" id="hint"></div>
+  <div class="ver" id="ver"></div>
 </footer>
 <script>
 (function () {
   "use strict";
+  // 页面版本：每次改这个文件都要改一下。电脑上「生成微信链接」会等 GitHub 上的版本跟这里一致才给链接；
+  // 手机打开时如果发现自己是缓存的旧版，会自动换成新版。
+  var PAGE_VER = "2026-11-19.2";
   function $(id) { return document.getElementById(id); }
 
   // ---------- 文字 / strings ----------
@@ -176,7 +181,7 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
       copyManual: "长按上面的文字全选、复制，发回给家里", hint: "点一项，可以填上数量和单价（也可以不填），点「确认已买」后移到「已买 · 待核对」。结账后对着小票点「核对」。点清单标题可以收起或展开。清单上没有的东西，点「＋ 添加清单外的商品」自己加。记录保存在这台手机上，关掉再打开还在。",
       addBtn: "＋ 添加清单外的商品", addTitle: "添加商品", nameLabel: "名称", addHint: "只有名称必填，数量、单价都可以不填。", later: "还没买，先加到清单里", saveLater: "保存（还没买）",
       del: "删除这一项", delConfirm: "确定删除？再点一次", needName: "先填名称", addedHead: "自己加的", addedNote: "自己加的", resultAdded: "另外买的（{n}）：{list}",
-      listTodo: "还要买", listDone: "已买 · 待核对", listChk: "已核对", vBtn: "核对", vDone: "已核对", vAria: "{n}：和小票一致", vUndoAria: "{n}：取消核对",
+      ver: "页面版本 {v}", listTodo: "还要买", listDone: "已买 · 待核对", listChk: "已核对", vBtn: "核对", vDone: "已核对", vAria: "{n}：和小票一致", vUndoAria: "{n}：取消核对",
       vHint: "结账后对着小票逐项看：名称、数量、价格都一致，就点右边的「核对」，它会移到下面「已核对」。", noPriceN: "{n} 项没填价格。", resultChecked: " · 已对小票 {a}/{b} 项",
       resultTitle: "购物结果 {range}", resultBought: "已买（{n}）：{list}", resultNot: "没买到（{n}）：{list}", none: "无", empty: "这一周没有要买的东西。",
       uploading: "清单还在上传，稍等几秒自动刷新…",
@@ -197,7 +202,7 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
       copyManual: "Press and hold the text above, select all, copy and send it back", hint: "Tap an item, optionally fill in quantity and price, then “Mark as bought” to move it to “Bought · to check”. After paying, tap “Check” for each item that matches the receipt. Tap a list title to fold or unfold it. For something not on the list, tap “+ Add something not on the list”. Everything is saved on this phone, even if you close the page.",
       addBtn: "+ Add something not on the list", addTitle: "Add an item", nameLabel: "Name", addHint: "Only the name is needed — quantity and price are optional.", later: "Not bought yet — add it to the list", saveLater: "Save (not bought yet)",
       del: "Delete this item", delConfirm: "Delete? Tap again", needName: "Enter a name first", addedHead: "Added by you", addedNote: "Added by you", resultAdded: "Extra items ({n}): {list}",
-      listTodo: "To buy", listDone: "Bought · to check", listChk: "Checked", vBtn: "Check", vDone: "Checked", vAria: "{n}: matches the receipt", vUndoAria: "{n}: uncheck",
+      ver: "Page version {v}", listTodo: "To buy", listDone: "Bought · to check", listChk: "Checked", vBtn: "Check", vDone: "Checked", vAria: "{n}: matches the receipt", vUndoAria: "{n}: uncheck",
       vHint: "After paying, go through the receipt: if name, quantity and price match, tap “Check” on the right and the item moves down to “Checked”.", noPriceN: "{n} without a price.", noPriceN_1: "1 without a price.", resultChecked: " · {a}/{b} checked against the receipt",
       resultTitle: "Shopping result {range}", resultBought: "Bought ({n}): {list}", resultNot: "Not bought ({n}): {list}", none: "none", empty: "Nothing to buy this week.",
       uploading: "The list is still uploading — this refreshes in a few seconds…",
@@ -427,6 +432,7 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
     $("ok").hidden = !(every.length && !todo.length);
     $("copy").textContent = tr("copy");
     $("hint").textContent = tr("hint");
+    $("ver").textContent = tr("ver", { v: PAGE_VER });
     $("res").hidden = true;
     // 标签：旧链接里没有菜单，就不显示「每日菜单」
     var hasMenu = Array.isArray(data.m);
@@ -584,6 +590,19 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:14px;border:1px soli
   var q = {}, h = {};
   location.search.replace(/^\?/, "").split("&").forEach(function (kv) { var p = kv.split("="); if (p[0]) q[p[0]] = p[1] || ""; });
   location.hash.replace(/^#/, "").split("&").forEach(function (kv) { var p = kv.split("="); if (p[0]) h[p[0]] = p[1] || ""; });
+  // 微信会缓存网页：看看 GitHub 上是不是有更新的版本，有就换成新版（每个版本最多换一次，不会来回刷）
+  (function checkFresh() {
+    if (window.SHOPPING_DATA || !/^https?:$/.test(location.protocol) || !window.fetch) return;
+    fetch(location.pathname + "?ver=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.text() : ""; }).then(function (txt) {
+      var m = txt.match(/PAGE_VER = "([^"]+)"/);
+      if (!m || m[1] === PAGE_VER) return;
+      var flag = "gouwu-reloaded-" + PAGE_VER;
+      try { if (sessionStorage.getItem(flag)) return; sessionStorage.setItem(flag, "1"); } catch (e) { return; }
+      var qs = location.search.replace(/^\?/, "").split("&").filter(function (kv) { return kv && kv.indexOf("r=") !== 0; });
+      qs.push("r=" + Date.now().toString(36));
+      location.replace(location.pathname + "?" + qs.join("&") + location.hash);
+    }).catch(function () { /* 没网就算了 */ });
+  })();
   var savedLang = stored("gouwu-lang");
   LANG = savedLang === "en" || savedLang === "zh" ? savedLang : (/^zh/i.test(navigator.language || "zh") ? "zh" : "en");
   render();
